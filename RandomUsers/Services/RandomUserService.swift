@@ -6,7 +6,7 @@
 //
 import Foundation
 struct RandomUserService {
-    private let baseURL = "http://randomuser.me/"
+    private let baseURL = "https://randomuser.me/api/"
     func fetchRandomUsersGrouped(numberOfUsers: Int) async throws -> [User] {
         let urlString = "\(baseURL)?results=\(numberOfUsers)"
         guard let url = URL(string: urlString) else {

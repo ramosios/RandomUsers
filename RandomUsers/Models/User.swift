@@ -30,10 +30,30 @@ struct Name: Decodable {
 }
 
 struct Location: Decodable {
-    let street: String
+    struct Street: Decodable {
+        let number: Int
+        let name: String
+    }
+    let street: Street
     let city: String
     let state: String
-    let postcode: String
+    let postcode: Postcode
+}
+// Since postcode can be either an Int or a String, we use an enum to handle both cases.
+enum Postcode: Decodable {
+    case int(Int)
+    case string(String)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let intValue = try? container.decode(Int.self) {
+            self = .int(intValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.typeMismatch(Postcode.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Postcode value cannot be decoded"))
+        }
+    }
 }
 
 struct Login: Decodable {
