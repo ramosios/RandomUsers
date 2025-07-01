@@ -4,11 +4,11 @@
 //
 //  Created by Jorge Ramos on 01/07/25.
 //
-struct UserResponse: Decodable {
+struct UserResponse: Codable, Equatable {
     let results: [User]
 }
 
-struct User: Decodable {
+struct User: Codable, Equatable {
     let gender: String
     let name: Name
     let location: Location
@@ -23,14 +23,14 @@ struct User: Decodable {
     let nat: String
 }
 
-struct Name: Decodable {
+struct Name: Codable, Equatable {
     let title: String
     let first: String
     let last: String
 }
 
-struct Location: Decodable {
-    struct Street: Decodable {
+struct Location: Codable, Equatable {
+    struct Street: Codable, Equatable {
         let number: Int
         let name: String
     }
@@ -39,8 +39,8 @@ struct Location: Decodable {
     let state: String
     let postcode: Postcode
 }
-// Since postcode can be either an Int or a String, we use an enum to handle both cases.
-enum Postcode: Decodable {
+// Since postcode can be either an Int or a String we can use an enum to handle both cases.
+enum Postcode: Codable, Equatable {
     case int(Int)
     case string(String)
 
@@ -56,7 +56,7 @@ enum Postcode: Decodable {
     }
 }
 
-struct Login: Decodable {
+struct Login: Codable, Equatable {
     let username: String
     let password: String
     let salt: String
@@ -65,12 +65,12 @@ struct Login: Decodable {
     let sha256: String
 }
 
-struct ID: Decodable {
+struct ID: Codable, Equatable {
     let name: String
     let value: String?
 }
 
-struct Picture: Decodable {
+struct Picture: Codable, Equatable {
     let large: String
     let medium: String
     let thumbnail: String

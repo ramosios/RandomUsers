@@ -24,8 +24,6 @@ struct RandomUserService {
             throw UserAPIError.decodingFailed
         }
     }
-        
-    
 }
 
 enum UserAPIError: Error, LocalizedError, Equatable {
