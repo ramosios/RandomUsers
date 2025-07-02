@@ -13,7 +13,7 @@ struct UserListView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach(viewModel.users, id: \.login.uuid) { user in
+                ForEach(viewModel.filteredUsers, id: \.login.uuid) { user in
                     NavigationLink(destination: UserDetailView(user: user)) {
                         UserRowView(user: user)
                     }
@@ -21,6 +21,7 @@ struct UserListView: View {
                 .onDelete(perform: viewModel.deleteUser)
             }
             .navigationTitle("Users")
+            .searchable(text: $viewModel.searchText, prompt: "Search by name or email")
             .task {
                 await viewModel.fetchUsers(count: 5)
             }

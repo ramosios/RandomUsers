@@ -10,7 +10,18 @@ import Foundation
 class UserListViewModel: ObservableObject {
     @Published var users: [User] = []
     @Published var errorMessage: String?
+    @Published var searchText: String = ""
     private var persistenceManager: UserPersistenceManager?
+    
+    var filteredUsers: [User] {
+        guard !searchText.isEmpty else { return users }
+        let lowercased = searchText.lowercased()
+        return users.filter {
+                $0.name.first.lowercased().contains(lowercased) ||
+                $0.name.last.lowercased().contains(lowercased) ||
+                $0.email.lowercased().contains(lowercased)
+        }
+    }
     
     init() {
         do {
