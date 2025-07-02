@@ -10,10 +10,13 @@ import Foundation
 class UserListViewModel: ObservableObject {
     @Published var users: [User] = []
     @Published var errorMessage: String?
-
+    private let persistenceManager = UserPersistenceManager()
     func fetchUsers(count: Int) async {
         do {
-            users = try await RandomUserService().fetchRandomUsersGrouped(numberOfUsers: count)
+            let fetchedUsers = try await RandomUserService().fetchRandomUsersGrouped(numberOfUsers: count)
+            persistenceManager.save(users: fetchedUsers)
+            users = persistenceManager.load()
+            
         } catch {
             errorMessage = error.localizedDescription
         }
