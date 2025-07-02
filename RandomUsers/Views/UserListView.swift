@@ -12,10 +12,13 @@ struct UserListView: View {
 
     var body: some View {
         NavigationView {
-            List(viewModel.users, id: \.login.uuid) { user in
-                NavigationLink(destination: UserDetailView(user: user)) {
-                    UserRowView(user: user)
+            List {
+                ForEach(viewModel.users, id: \.login.uuid) { user in
+                    NavigationLink(destination: UserDetailView(user: user)) {
+                        UserRowView(user: user)
+                    }
                 }
+                .onDelete(perform: viewModel.deleteUser)
             }
             .navigationTitle("Users")
             .task {

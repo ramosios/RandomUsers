@@ -33,4 +33,16 @@ class UserListViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+    func deleteUser(at offsets: IndexSet) {
+        guard let persistenceManager = persistenceManager else { return }
+        for index in offsets {
+            let user = users[index]
+            do {
+                try persistenceManager.delete(user: user)
+                users.remove(at: index)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
 }
