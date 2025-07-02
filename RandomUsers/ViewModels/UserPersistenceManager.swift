@@ -9,14 +9,25 @@ import Foundation
 import RealmSwift
 
 class UserPersistenceManager {
-    private let realm = try! Realm()
+    private let realm: Realm
     
-    func save(users: [User]) {
-        // Before saving filter out duplicates
+    init() throws {
+        do {
+            self.realm = try Realm()
+        } catch {
+            throw UserPersistenceRealmError.realmInitFailed(error)
+        }
+    }
+    
+    func save(users: [User]) throws {
         let filteredUsers = filterOutExceptions(newUsers: users)
         let userObjects = filteredUsers.map { UserObject(from: $0) }
-        try? realm.write {
-            realm.add(userObjects, update: .modified)
+        do {
+            try realm.write {
+                realm.add(userObjects, update: .modified)
+            }
+        } catch {
+            throw UserPersistenceRealmError.realmWriteFailed(error)
         }
     }
 
@@ -25,17 +36,23 @@ class UserPersistenceManager {
         return userObjects.map { $0.toUser() }
     }
 
-    func delete(user: User) {
+    func delete(user: User) throws {
         if let userObject = realm.object(ofType: UserObject.self, forPrimaryKey: user.login.uuid) {
-                try? realm.write {
+            do {
+                try realm.write {
                     realm.delete(userObject)
-                    // Save deleted user uuid to avoid adding it again in the future
                     let deletedUser = DeletedUserObject()
                     deletedUser.id = user.login.uuid
                     realm.add(deletedUser, update: .modified)
+                }
+            } catch {
+                throw UserPersistenceRealmError.realmWriteFailed(error)
             }
+        } else {
+            throw UserPersistenceRealmError.userNotFound
         }
     }
+    
     private func filterOutExceptions(newUsers: [User]) -> [User] {
         let savedIds = Set(load().map { $0.login.uuid })
         let deletedIds = Set(realm.objects(DeletedUserObject.self).map { $0.id })
@@ -53,10 +70,8 @@ class UserPersistenceManager {
     }
 }
 
-enum UserPersistenceError: Error {
-    case encodingFailed
-    case decodingFailed
-    case coreDataSaveFailed(Error)
-    case coreDataFetchFailed(Error)
+enum UserPersistenceRealmError: Error {
+    case realmInitFailed(Error)
+    case realmWriteFailed(Error)
     case userNotFound
 }
