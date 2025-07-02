@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct RandomUsersApp: App {
+    @StateObject private var viewModel = UserListViewModel()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            UserListView()
+                .environmentObject(viewModel)
         }
     }
 }
