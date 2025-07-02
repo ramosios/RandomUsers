@@ -6,56 +6,57 @@
 //
 
 import Foundation
+import RealmSwift
 
 class UserPersistenceManager {
-    private let usersKey = "savedUsers"
+    private let realm = try! Realm()
     
     func save(users: [User]) {
-        let filteredUsers = filterOutDuplicates(newUsers: users)
-        let encoder = JSONEncoder()
-        if let encoded = try? encoder.encode(filteredUsers) {
-            UserDefaults.standard.set(encoded, forKey: usersKey)
+        // Before saving filter out duplicates
+        let filteredUsers = filterOutExceptions(newUsers: users)
+        let userObjects = filteredUsers.map { UserObject(from: $0) }
+        try? realm.write {
+            realm.add(userObjects, update: .modified)
         }
     }
-    
+
     func load() -> [User] {
-        guard let data = UserDefaults.standard.data(forKey: usersKey) else { return [] }
-        let decoder = JSONDecoder()
-        return (try? decoder.decode([User].self, from: data)) ?? []
+        let userObjects = realm.objects(UserObject.self)
+        return userObjects.map { $0.toUser() }
     }
-    
+
     func delete(user: User) {
-        var users = load()
-        users.removeAll { $0 == user }
-        save(users: users)
+        if let userObject = realm.object(ofType: UserObject.self, forPrimaryKey: user.login.uuid) {
+                try? realm.write {
+                    realm.delete(userObject)
+                    // Save deleted user uuid to avoid adding it again in the future
+                    let deletedUser = DeletedUserObject()
+                    deletedUser.id = user.login.uuid
+                    realm.add(deletedUser, update: .modified)
+            }
+        }
     }
-    // O(n) algorithm to filter out duplicates based on user ID
-    // This function will be used for ensuring there are no duplicate users in memory
-    private func filterOutDuplicates(newUsers: [User]) -> [User] {
-        let savedUsers = load()
-        var seenIds = Set<String>()
+    private func filterOutExceptions(newUsers: [User]) -> [User] {
+        let savedIds = Set(load().map { $0.login.uuid })
+        let deletedIds = Set(realm.objects(DeletedUserObject.self).map { $0.id })
+        var seenIds = savedIds
         var uniqueUsers = [User]()
 
-        if savedUsers.isEmpty {
-            // If there are no saved users just remove duplicates from incoming users
-            for user in newUsers {
-                guard let id = user.id.value else { continue }
-                if !seenIds.contains(id) {
-                    uniqueUsers.append(user)
-                    seenIds.insert(id)
-                }
-            }
-        } else {
-            // If there are saved users compare both list to find unique users
-            let savedIds = Set(savedUsers.compactMap { $0.id.value })
-            for user in newUsers {
-                guard let id = user.id.value else { continue }
-                if !savedIds.contains(id) && !seenIds.contains(id) {
-                    uniqueUsers.append(user)
-                    seenIds.insert(id)
-                }
+        for user in newUsers {
+            let id = user.login.uuid
+            if !deletedIds.contains(id) && !seenIds.contains(id) {
+                uniqueUsers.append(user)
+                seenIds.insert(id)
             }
         }
         return uniqueUsers
     }
+}
+
+enum UserPersistenceError: Error {
+    case encodingFailed
+    case decodingFailed
+    case coreDataSaveFailed(Error)
+    case coreDataFetchFailed(Error)
+    case userNotFound
 }
