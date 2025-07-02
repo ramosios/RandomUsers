@@ -17,18 +17,14 @@ struct UserListView: View {
                     NavigationLink(destination: UserDetailView(user: user)) {
                         UserRowView(user: user)
                     }
-                    // checks if the user is the last in the list to load more users
-                    .onAppear{
-                        Task{
-                            // Load more users when the last user appears
-                            await viewModel.loadMoreUsersIfNeeded(currentUser: user)
-                        }
-                    }
                 }
                 .onDelete(perform: viewModel.deleteUser)
             }
             .navigationTitle("Users")
             .searchable(text: $viewModel.searchText, prompt: "Search by name or email")
+            .task {
+                await viewModel.fetchUsers(count: 5)
+            }
             .alert(isPresented: Binding<Bool>(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }

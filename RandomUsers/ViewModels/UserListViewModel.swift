@@ -12,7 +12,6 @@ class UserListViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var searchText: String = ""
     private var persistenceManager: UserPersistenceManager?
-    private var isLoadingMore = false
     
     var filteredUsers: [User] {
         guard !searchText.isEmpty else { return users }
@@ -57,13 +56,4 @@ class UserListViewModel: ObservableObject {
             }
         }
     }
-    func loadMoreUsersIfNeeded(currentUser: User) async {
-         guard !isLoadingMore,
-               let lastUser = filteredUsers.last,
-               currentUser.login.uuid == lastUser.login.uuid else { return }
-         isLoadingMore = true
-         await fetchUsers(count: 10)
-         isLoadingMore = false
-     }
- 
 }
