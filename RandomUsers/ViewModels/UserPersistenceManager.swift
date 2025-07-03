@@ -70,8 +70,17 @@ class UserPersistenceManager {
     }
 }
 
-enum UserPersistenceRealmError: Error {
+enum UserPersistenceRealmError: Error, Equatable {
     case realmInitFailed(Error)
     case realmWriteFailed(Error)
     case userNotFound
+    
+    public static func == (lhs: UserPersistenceRealmError, rhs: UserPersistenceRealmError) -> Bool {
+        switch (lhs, rhs) {
+        case (.userNotFound, .userNotFound): return true
+        case (.realmInitFailed, .realmInitFailed): return true
+        case (.realmWriteFailed, .realmWriteFailed): return true
+        default: return false
+        }
+    }
 }
