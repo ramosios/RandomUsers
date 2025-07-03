@@ -43,6 +43,7 @@ class UserPersistenceManager {
                     realm.delete(userObject)
                     let deletedUser = DeletedUserObject()
                     deletedUser.id = user.login.uuid
+                    //Add deleted user to DeletedUserObject to keep track of deletions
                     realm.add(deletedUser, update: .modified)
                 }
             } catch {
@@ -52,7 +53,7 @@ class UserPersistenceManager {
             throw UserPersistenceRealmError.userNotFound
         }
     }
-    
+    // Filters out users that are already saved or marked as deleted
     private func filterOutExceptions(newUsers: [User]) -> [User] {
         let savedIds = Set(load().map { $0.login.uuid })
         let deletedIds = Set(realm.objects(DeletedUserObject.self).map { $0.id })

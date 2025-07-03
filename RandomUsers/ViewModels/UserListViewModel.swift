@@ -13,7 +13,7 @@ class UserListViewModel: ObservableObject {
     @Published var searchText: String = ""
     private var persistenceManager: UserPersistenceManager?
     private var isLoadingMore = false
-    
+    // Search results based on the search text
     var filteredUsers: [User] {
         guard !searchText.isEmpty else { return users }
         let lowercased = searchText.lowercased()
@@ -31,7 +31,7 @@ class UserListViewModel: ObservableObject {
             self.errorMessage = error.localizedDescription
         }
     }
-    
+    // Called on first install or when saved users are empty
     func fetchUsers(count: Int) async {
         guard let persistenceManager = persistenceManager else {
             errorMessage = "Persistence manager not initialized."
@@ -57,6 +57,7 @@ class UserListViewModel: ObservableObject {
             }
         }
     }
+    // Called when the last user in the list is displayed
     func loadMoreUsersIfNeeded(currentUser: User) async {
          guard !isLoadingMore,
                let lastUser = filteredUsers.last,
